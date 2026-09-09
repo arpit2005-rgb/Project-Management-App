@@ -1,5 +1,9 @@
 import { body } from "express-validator";
-
+import {
+  AvailableTaskPriorities,
+  AvailableTaskStatues,
+  AvailableUserRoles,
+} from "../utils/constants.js";
 const userRegisterValidator = () => {
   return [
     //middleware1 actually (req,res,next) => {val = req.body.email}
@@ -55,10 +59,105 @@ const userResetForgotPasswordValidator = () => {
   ];
 };
 
+const createProjectValidator = () => {
+  return [
+    body("name").notEmpty().withMessage("Name is required"),
+    body("description").optional(),
+  ];
+};
+
+const addMemberToProjectValidator = () => {
+  return [
+    body("email")
+      .trim()
+      .notEmpty()
+      .withMessage("Email is required")
+      .isEmail()
+      .withMessage("Email is invalid"),
+
+    body("role")
+      .notEmpty()
+      .withMessage("Role is required")
+      .isIn(AvailableUserRoles)
+      .withMessage("Role is invalid"),
+  ];
+};
+
+const createTaskValidator = () => {
+  return [
+    body("title").trim().notEmpty().withMessage("Title is required"),
+    body("description").optional().trim(),
+    body("assignedTo")
+      .optional()
+      .isMongoId()
+      .withMessage("Assigned user must be a valid id"),
+    body("status")
+      .optional()
+      .isIn(AvailableTaskStatues)
+      .withMessage("Status is invalid"),
+    body("priority")
+      .optional()
+      .isIn(AvailableTaskPriorities)
+      .withMessage("Priority is invalid"),
+  ];
+};
+
+const updateTaskValidator = () => {
+  return [
+    body("title").optional().trim().notEmpty().withMessage("Title is required"),
+    body("description").optional().trim(),
+    body("assignedTo")
+      .optional()
+      .isMongoId()
+      .withMessage("Assigned user must be a valid id"),
+    body("status")
+      .optional()
+      .isIn(AvailableTaskStatues)
+      .withMessage("Status is invalid"),
+    body("priority")
+      .optional()
+      .isIn(AvailableTaskPriorities)
+      .withMessage("Priority is invalid"),
+  ];
+};
+
+const createSubTaskValidator = () => {
+  return [
+    body("title").trim().notEmpty().withMessage("Title is required"),
+    body("isCompleted")
+      .optional()
+      .isBoolean()
+      .withMessage("isCompleted must be a boolean"),
+  ];
+};
+
+const updateSubTaskValidator = () => {
+  return [
+    body("title").optional().trim().notEmpty().withMessage("Title is required"),
+    body("isCompleted")
+      .optional()
+      .isBoolean()
+      .withMessage("isCompleted must be a boolean"),
+  ];
+};
+
+const createNoteValidator = () => {
+  return [
+    body("content").trim().notEmpty().withMessage("Note content is required"),
+  ];
+};
+
 export {
   userRegisterValidator,
   userLoginValidator,
   userChangeCurrentPasswordValidator,
   userForgotPasswordValidator,
   userResetForgotPasswordValidator,
+  createProjectValidator,
+  addMemberToProjectValidator,
+  createTaskValidator,
+  updateTaskValidator,
+  createSubTaskValidator,
+  updateSubTaskValidator,
+  createNoteValidator,
 };

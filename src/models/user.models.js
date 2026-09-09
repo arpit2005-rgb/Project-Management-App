@@ -31,7 +31,7 @@ const userSchema = Schema(
       lowercase: true,
       trim: true,
     },
-    firstName: {
+    fullName: {
       type: String,
       trim: true,
     },
