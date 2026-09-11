@@ -15,17 +15,84 @@ const getTasks = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Project not found");
   }
 
-  const tasks = await Task.find({
-    project: new mongoose.Types.ObjectId(projectId),
-  }).populate("assignedTo", "avatar username fullName");
+  const tasks = await Task.aggregate([
+    {
+      $match: {
+        project: new mongoose.Types.ObjectId(projectId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedTo",
+        foreignField: "_id",
+        as: "assignedTo",
+        pipeline: [
+          {
+            $project: {
+              _id: 1,
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "subtasks",
+        localField: "_id",
+        foreignField: "task",
+        as: "subtasks",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+              pipeline: [
+                {
+                  $project: {
+                    _id: 1,
+                    username: 1,
+                    fullName: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              createdBy: {
+                $arrayElemAt: ["$createdBy", 0],
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        assignedTo: {
+          $arrayElemAt: ["$assignedTo", 0],
+        },
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+  ]);
 
-  //  .populate Look at assignedTo field (which stores user ID)
-  // Fetch that user from DB
-  // Replace ID with actual user data
-  // Only include:
-  // avatar
-  // username
-  // fullname
   return res
     .status(200)
     .json(new ApiResponse(200, tasks, "Task fetched successfully"));

@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { clearAccessToken } from "../auth/session";
 
 function Layout({ user, setUser }) {
   const navigate = useNavigate();
@@ -7,9 +8,11 @@ function Layout({ user, setUser }) {
   const handleLogout = async () => {
     try {
       await axios.post("/auth/logout");
+      clearAccessToken();
       setUser(null);
       navigate("/login");
     } catch (error) {
+      clearAccessToken();
       console.error(error);
     }
   };

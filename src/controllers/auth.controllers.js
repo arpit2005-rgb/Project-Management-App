@@ -10,10 +10,13 @@ import {
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
+const isLocalDevelopment = () =>
+  !process.env.NODE_ENV || process.env.NODE_ENV !== "production";
+
 const getCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   path: "/",
 });
 
