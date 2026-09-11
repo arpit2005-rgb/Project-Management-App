@@ -15,8 +15,8 @@ const isLocalDevelopment = () =>
 
 const getCookieOptions = () => ({
   httpOnly: true,
-  secure: !isLocalDevelopment(),
-  sameSite: isLocalDevelopment() ? "lax" : "none",
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   path: "/",
 });
 
