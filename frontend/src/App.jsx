@@ -11,13 +11,14 @@ import TasksPage from "./pages/TasksPage";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 
-const DEFAULT_API_ORIGIN = import.meta.env.PROD
-  ? "https://project-management-backend-three-kappa.vercel.app"
-  : "http://localhost:8000";
+// Use Vercel/Render API URL in production.
+// Fall back to localhost for local development.
+const DEFAULT_API_ORIGIN = "http://localhost:8000";
 
-const API_ORIGIN = (
-  import.meta.env.VITE_API_BASE_URL || DEFAULT_API_ORIGIN
-).replace(/\/+$/, "");
+const API_ORIGIN = (import.meta.env.VITE_API_URL || DEFAULT_API_ORIGIN).replace(
+  /\/+$/,
+  "",
+);
 
 const API_BASE = `${API_ORIGIN}/api/v1`;
 
@@ -34,6 +35,7 @@ axios.interceptors.request.use((config) => {
 
 axios.interceptors.response.use(
   (response) => response,
+
   async (error) => {
     const originalRequest = error.config;
 
@@ -83,6 +85,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage setUser={setUser} />} />
+
       <Route path="/signup" element={<SignupPage />} />
 
       <Route
@@ -96,9 +99,13 @@ function App() {
         }
       >
         <Route index element={<DashboardPage user={user} />} />
+
         <Route path="projects" element={<ProjectsPage />} />
+
         <Route path="projects/:projectId" element={<ProjectDetailsPage />} />
+
         <Route path="tasks" element={<TasksPage />} />
+
         <Route
           path="profile"
           element={<ProfilePage user={user} setUser={setUser} />}
