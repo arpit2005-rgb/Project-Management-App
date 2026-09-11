@@ -11,10 +11,26 @@ import TasksPage from "./pages/TasksPage";
 import ProfilePage from "./pages/ProfilePage";
 import Layout from "./components/Layout";
 
-const API_BASE = "http://localhost:8000/api/v1";
+const DEFAULT_API_ORIGIN = import.meta.env.PROD
+  ? "https://project-management-backend-three-kappa.vercel.app"
+  : "http://localhost:8000";
+
+const API_ORIGIN = (
+  import.meta.env.VITE_API_BASE_URL || DEFAULT_API_ORIGIN
+).replace(/\/+$/, "");
+
+const API_BASE = `${API_ORIGIN}/api/v1`;
 
 axios.defaults.baseURL = API_BASE;
 axios.defaults.withCredentials = true;
+
+axios.interceptors.request.use((config) => {
+  if (config.withCredentials === undefined) {
+    config.withCredentials = true;
+  }
+
+  return config;
+});
 
 axios.interceptors.response.use(
   (response) => response,
@@ -23,6 +39,7 @@ axios.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry &&
       originalRequest.url !== "/auth/refresh-token"
     ) {

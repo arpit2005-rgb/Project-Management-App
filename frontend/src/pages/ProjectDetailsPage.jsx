@@ -18,6 +18,8 @@ function ProjectDetailsPage() {
     status: "todo",
   });
   const [newNote, setNewNote] = useState({ content: "" });
+  const [subtaskDrafts, setSubtaskDrafts] = useState({});
+  const [subtaskEdits, setSubtaskEdits] = useState({});
 
   const loadData = async () => {
     try {
@@ -139,6 +141,69 @@ function ProjectDetailsPage() {
       loadData();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete note");
+    }
+  };
+
+  const handleCreateSubtask = async (taskId, e) => {
+    e.preventDefault();
+
+    const title = (subtaskDrafts[taskId] || "").trim();
+
+    if (!title) {
+      setError("Subtask title is required");
+      return;
+    }
+
+    try {
+      setError("");
+      await axios.post(`/tasks/${projectId}/t/${taskId}/subtasks`, {
+        title,
+      });
+      setSubtaskDrafts((prev) => ({ ...prev, [taskId]: "" }));
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create subtask");
+    }
+  };
+
+  const handleUpdateSubtask = async (subtaskId, title) => {
+    const trimmedTitle = (title || "").trim();
+
+    if (!trimmedTitle) {
+      setError("Subtask title is required");
+      return;
+    }
+
+    try {
+      setError("");
+      await axios.put(`/tasks/${projectId}/st/${subtaskId}`, {
+        title: trimmedTitle,
+      });
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update subtask");
+    }
+  };
+
+  const handleToggleSubtask = async (subtaskId, isCompleted) => {
+    try {
+      setError("");
+      await axios.put(`/tasks/${projectId}/st/${subtaskId}`, {
+        isCompleted,
+      });
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update subtask");
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId) => {
+    try {
+      setError("");
+      await axios.delete(`/tasks/${projectId}/st/${subtaskId}`);
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete subtask");
     }
   };
 
@@ -282,6 +347,84 @@ function ProjectDetailsPage() {
                 >
                   Delete
                 </button>
+              </div>
+
+              <div className="subtask-section">
+                <h5>Subtasks</h5>
+
+                <form
+                  onSubmit={(e) => handleCreateSubtask(task._id, e)}
+                  className="small-form"
+                >
+                  <input
+                    type="text"
+                    value={subtaskDrafts[task._id] || ""}
+                    onChange={(e) =>
+                      setSubtaskDrafts((prev) => ({
+                        ...prev,
+                        [task._id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Add subtask"
+                  />
+                  <button type="submit">Add Subtask</button>
+                </form>
+
+                {(task.subtasks || []).length === 0 ? (
+                  <p className="muted-text">No subtasks yet.</p>
+                ) : (
+                  <ul className="subtask-list">
+                    {(task.subtasks || []).map((subtask) => (
+                      <li key={subtask._id} className="subtask-item">
+                        <label className="subtask-check">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(subtask.isCompleted)}
+                            onChange={() =>
+                              handleToggleSubtask(
+                                subtask._id,
+                                !subtask.isCompleted,
+                              )
+                            }
+                          />
+                        </label>
+
+                        <input
+                          type="text"
+                          value={
+                            subtaskEdits[subtask._id] ?? subtask.title ?? ""
+                          }
+                          onChange={(e) =>
+                            setSubtaskEdits((prev) => ({
+                              ...prev,
+                              [subtask._id]: e.target.value,
+                            }))
+                          }
+                          className={subtask.isCompleted ? "subtask-done" : ""}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleUpdateSubtask(
+                              subtask._id,
+                              subtaskEdits[subtask._id] ?? subtask.title,
+                            )
+                          }
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSubtask(subtask._id)}
+                          className="danger-btn"
+                        >
+                          Delete
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           ))}
